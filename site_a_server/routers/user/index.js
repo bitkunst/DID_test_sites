@@ -8,4 +8,8 @@ router.post("/regist", userController.regist);
 
 router.post("/login", userController.login);
 
+router.post("/sendToken", userController.sendToken);
+
+router.post("/getPoint", userController.getPoint);
+
 module.exports = router;
