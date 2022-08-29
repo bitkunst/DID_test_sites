@@ -35,13 +35,13 @@ const Regist = () => {
 
   const pwOverlap = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    setPwCheck("");
+    // setPwCheck("");
     setInputPw(e.target.value);
   };
 
   const pwOverlap2 = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    setPwCheck("");
+    // setPwCheck("");
     setInputPw2(e.target.value);
   };
 

@@ -4,6 +4,7 @@ const UserSchema = new Schema(
   {
     userCode: {
       type: String,
+      default: "",
     },
     userId: {
       type: String,

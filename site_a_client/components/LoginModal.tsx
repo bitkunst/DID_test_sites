@@ -1,8 +1,6 @@
 import {
   Box,
   Button,
-  Flex,
-  FormControl,
   FormLabel,
   Input,
   Modal,
@@ -14,15 +12,21 @@ import {
   ModalOverlay,
   useDisclosure,
 } from "@chakra-ui/react";
-import React, { FormEvent } from "react";
-import axios, { AxiosResponse } from "axios";
+import React, { FormEvent, useContext, useEffect } from "react";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import Router from "next/router";
+import { useCookies } from "react-cookie";
+import { Global } from "../pages/_app";
 
 function LoginModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
+
+  const [, setCookie] = useCookies();
+
+  const { isLogin, setIsLogin, setUserToken } = useContext(Global);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -36,18 +40,30 @@ function LoginModal() {
         "http://localhost:4001/api/user/login",
         { userId, userPw }
       );
-      if (!response.data.error) {
+      const { error, loginCheck, token } = response.data;
+      if (!error && loginCheck) {
+        if (setUserToken === undefined || setIsLogin === undefined) return;
         alert("로그인 되었습니다.");
-        Router.push("/");
-      } else {
-        throw new Error("No such user exists");
+        setUserToken(token);
+        setCookie("CHANNEL_Token", token);
+        setIsLogin(true);
+        onClose();
+      } else if (error && !loginCheck) {
+        alert("일치하는 회원이 없습니다. 아이디와 패스워드를 확인해주세요.");
       }
     } catch (err) {
+      const error = err as AxiosError<any>;
       alert("로그인이 정상적으로 처리되지 않았습니다. 다시 시도해 주세요.");
+      console.log(error);
     }
-
-    console.log(userId, userPw);
   };
+
+  useEffect(() => {
+    if (isLogin === false) return;
+    else {
+      Router.push("/");
+    }
+  }, [isLogin]);
 
   return (
     <>

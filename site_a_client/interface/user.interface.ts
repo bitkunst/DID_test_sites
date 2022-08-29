@@ -3,6 +3,8 @@ import { Dispatch, SetStateAction } from "react";
 export interface IUserData {
   userCode?: string;
   userId?: string;
+  point?: Number;
+  isVerified?: boolean;
 }
 
 export interface IGlobal {
@@ -11,4 +13,5 @@ export interface IGlobal {
   isLogin?: boolean;
   setIsLogin?: Dispatch<SetStateAction<boolean>>;
   userData?: IUserData;
+  setUserData?: Dispatch<SetStateAction<IUserData>>;
 }
