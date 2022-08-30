@@ -32,6 +32,7 @@ const Header = () => {
       alert("로그인 후 이용해주세요.");
       return;
     }
+    if (setUserToken === undefined) return;
     try {
       const response: AxiosResponse = await axios.post(
         "http://localhost:4001/api/user/getPoint",
@@ -39,10 +40,8 @@ const Header = () => {
           userData,
         }
       );
-      const { error, updateCheck, token, point } = response.data;
+      const { error, updateCheck, token } = response.data;
       if (!error && updateCheck) {
-        if (setUserToken === undefined) return;
-
         setUserToken(token);
         setCookie("CHANNEL_Token", token);
       }

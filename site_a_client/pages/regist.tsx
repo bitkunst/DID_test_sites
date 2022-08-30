@@ -72,7 +72,9 @@ const Regist = () => {
         Router.push("/");
       }
     } catch (err) {
+      const error = err as AxiosError<any>;
       alert("회원가입이 정상적으로 처리되지 않았습니다. 다시 시도해 주세요.");
+      console.log(error);
     }
   };
 

@@ -12,4 +12,6 @@ router.post("/sendToken", userController.sendToken);
 
 router.post("/getPoint", userController.getPoint);
 
+router.post("/buyItem", userController.buyItem);
+
 module.exports = router;
