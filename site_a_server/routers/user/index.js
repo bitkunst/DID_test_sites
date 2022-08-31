@@ -14,4 +14,8 @@ router.post("/getPoint", userController.getPoint);
 
 router.post("/buyItem", userController.buyItem);
 
+router.get("/authDID", userController.authDID);
+
+router.get("/redirectURI", userController.redirectURI);
+
 module.exports = router;

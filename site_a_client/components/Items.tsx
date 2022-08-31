@@ -1,11 +1,8 @@
-import { Badge, Box } from "@chakra-ui/react";
+import { Badge, Box, useDisclosure } from "@chakra-ui/react";
 import Image from "next/image";
-import { ReactNode, useContext } from "react";
 import itemJSON from "../public/items.json";
 import { Item } from "../interface/item.interface";
-import { Global } from "../pages/_app";
-import axios, { AxiosError } from "axios";
-import { useCookies } from "react-cookie";
+import PayModal from "./PayModal";
 
 type propertyProps = {
   itemNum: string;
@@ -27,37 +24,7 @@ const ItemCard: React.FC<propertyProps> = ({ itemNum }) => {
     reviewCount: item[num]["reviewCount"],
   };
 
-  const { isLogin, setUserToken, userData, setUserData } = useContext(Global);
-  const [, setCookie] = useCookies();
-
-  const buyItem = async () => {
-    if (!isLogin) {
-      alert("로그인 후 이용해주세요.");
-      return;
-    }
-    if (setUserToken === undefined) return;
-
-    try {
-      const response = await axios.post(
-        "http://localhost:4001/api/user/buyItem",
-        { userData, itemPrice: property.formattedPrice }
-      );
-      const { error, result, token } = response.data;
-      if (error && !result) {
-        alert("포인트가 부족합니다.");
-      } else if (!error && result) {
-        setUserToken(token);
-        setCookie("CHANNEL_Token", token);
-        alert("상품 구매가 완료되었습니다.");
-      }
-    } catch (err) {
-      const error = err as AxiosError<any>;
-      console.log(error);
-      alert(
-        "상품 구매가 정상적으로 처리되지 않았습니다. 잠시후 다시 시도해주십시요."
-      );
-    }
-  };
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box
@@ -65,9 +32,10 @@ const ItemCard: React.FC<propertyProps> = ({ itemNum }) => {
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
-      onClick={buyItem}
       cursor="pointer"
+      onClick={onOpen}
     >
+      <PayModal isOpen={isOpen} onClose={onClose} num={num} />
       <Image
         src={property.imageUrl}
         alt={property.imageAlt}
@@ -75,7 +43,6 @@ const ItemCard: React.FC<propertyProps> = ({ itemNum }) => {
         height="200px"
         layout="responsive"
       />
-      {/* <Image src={property.imageUrl} layout="fill" /> */}
 
       <Box p="6">
         <Box display="flex" alignItems="baseline">

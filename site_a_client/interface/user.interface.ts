@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from "react";
 export interface IUserData {
   userCode?: string;
   userId?: string;
-  point?: Number;
+  point?: number;
   isVerified?: boolean;
 }
 
