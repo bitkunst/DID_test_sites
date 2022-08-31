@@ -2,6 +2,7 @@ require("dotenv").config();
 const User = require("../../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 
 const idOverlapChk = async (req, res) => {
   const { inputId } = req.body;
@@ -119,7 +120,7 @@ const buyItem = async (req, res) => {
     if (userData.point < itemPrice) res.json({ error: 1, result: false });
     else {
       const user = await User.findOne({ userId: userData.userId }).exec();
-      console.log(user);
+      //   console.log(user);
       const updatedUser = await User.findOneAndUpdate(
         { userId: user.userId },
         { point: user.point - itemPrice },
@@ -145,6 +146,31 @@ const buyItem = async (req, res) => {
   }
 };
 
+const authDID = (req, res) => {
+  console.log("hi");
+  const redirect_URI = "http://localhost:4001/api/user/redirectURI/";
+  const client_ID = "f41a5fd7e7dc46239aebf23f0b47047e";
+  res.redirect(
+    `http://localhost:8000/authorizor/auth?redirectURI=${redirect_URI}&clientID=${client_ID}`
+  );
+};
+
+const redirectURI = async (req, res) => {
+  const { code } = req.query;
+  const response = await axios.post("http://localhost:8000/authorizor/token", {
+    code,
+  });
+  console.log(response.data);
+  const token = response.data;
+
+  const userInfo = await axios.get("http://localhost:8000/authorizor/user", {
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+  console.log(userInfo.data);
+};
+
 module.exports = {
   idOverlapChk,
   regist,
@@ -152,4 +178,6 @@ module.exports = {
   sendToken,
   getPoint,
   buyItem,
+  authDID,
+  redirectURI,
 };

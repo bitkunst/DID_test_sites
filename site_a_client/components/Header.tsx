@@ -54,6 +54,10 @@ const Header = () => {
     }
   };
 
+  const authDID = async () => {
+    const response = await axios.get("http://localhost:4001/api/user/authDID");
+  };
+
   return (
     <>
       <Box h="100px">
@@ -87,7 +91,9 @@ const Header = () => {
               <Button colorScheme="blackAlpha" onClick={logout}>
                 Logout
               </Button>
-              <Button colorScheme="red">DID 인증하기</Button>
+              <Link href="http://localhost:4001/api/user/authDID">
+                <Button colorScheme="red">DID 인증하기</Button>
+              </Link>
             </>
           )}
         </ButtonGroup>
