@@ -8,11 +8,13 @@ const UserSchema = new Schema(
     },
     userId: {
       type: String,
-      required: [true, "User should have userId"],
+      required: false,
+      default: "",
     },
     userPw: {
       type: String,
-      required: [true, "User should have userPw"],
+      required: false,
+      default: "",
     },
     point: {
       type: Number,

@@ -32,6 +32,32 @@ const regist = (req, res) => {
   }
 };
 
+const registWithDID = async (req, res) => {
+  const { userId: id, userCode: code } = req.body;
+  try {
+    const newUser = new User({ userCode: code, userId: id });
+    const userData = await User.create(newUser);
+
+    // console.log(userInfo);
+    const { userCode, userId, point } = userData;
+    const userInfo = { userCode, userId, point };
+    const secretKey = process.env.SALT;
+    const options = { expiresIn: "7d" };
+
+    jwt.sign(userInfo, secretKey, options, (err, token) => {
+      if (err) throw new Error("Internal Server Error");
+      else {
+        res.cookie("CHANNEL_Token", token, {
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+        res.json({ error: 0, token });
+      }
+    });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 const login = async (req, res) => {
   const { userId, userPw } = req.body;
   try {
@@ -40,7 +66,7 @@ const login = async (req, res) => {
       bcrypt.compare(userPw, user.userPw, (err, result) => {
         if (err) throw new Error("Internal Server Error");
         if (result) {
-          console.log(user);
+          //   console.log(user);
           const { userCode, userId, point } = user;
           // 타 사이트 포인트 조회 코드 추가
           const userInfo = { userCode, userId, point };
@@ -62,6 +88,19 @@ const login = async (req, res) => {
     console.log(err);
     res.status(500).send("Internal Server Error");
   }
+};
+
+const logout = (req, res) => {
+  res.cookie("DID_ACCESS_TOKEN", "", {
+    maxAge: 0,
+  });
+  res.cookie("DID_REFRESH_TOKEN", "", {
+    maxAge: 0,
+  });
+  res.cookie("CHANNEL_Token", "", {
+    maxAge: 0,
+  });
+  res.redirect("http://localhost:3001");
 };
 
 const sendToken = (req, res) => {
@@ -88,25 +127,47 @@ const sendToken = (req, res) => {
 const getPoint = async (req, res) => {
   const { userData } = req.body;
   try {
-    const user = await User.findOne({ userId: userData.userId }).exec();
-    const updatedUser = await User.findOneAndUpdate(
-      { userId: user.userId },
-      { point: user.point + 100 },
-      { new: true }
-    );
-    const { userCode, userId, point } = updatedUser;
+    if (userData.userCode === "") {
+      const user = await User.findOne({ userId: userData.userId }).exec();
+      const updatedUser = await User.findOneAndUpdate(
+        { userId: user.userId },
+        { point: user.point + 100 },
+        { new: true }
+      );
+      const { userCode, userId, point } = updatedUser;
 
-    // 타 사이트 포인트 조회 코드 추가
+      // 타 사이트 포인트 조회 코드 추가
 
-    const updatedUserInfo = { userCode, userId, point };
-    // console.log(point);
-    const secretKey = process.env.SALT;
-    const options = { expiresIn: "7d" };
+      const updatedUserInfo = { userCode, userId, point };
+      // console.log(point);
+      const secretKey = process.env.SALT;
+      const options = { expiresIn: "7d" };
 
-    jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
-      if (err) throw new Error("Internal Server Error");
-      else res.json({ error: 0, updateCheck: true, token });
-    });
+      jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+        if (err) throw new Error("Internal Server Error");
+        else res.json({ error: 0, updateCheck: true, token });
+      });
+    } else {
+      const user = await User.findOne({ userCode: userData.userCode }).exec();
+      const updatedUser = await User.findOneAndUpdate(
+        { userId: user.userId },
+        { point: user.point + 100 },
+        { new: true }
+      );
+      const { userCode, userId, point } = updatedUser;
+
+      // 타 사이트 포인트 조회 코드 추가
+
+      const updatedUserInfo = { userCode, userId, point };
+      // console.log(point);
+      const secretKey = process.env.SALT;
+      const options = { expiresIn: "7d" };
+
+      jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+        if (err) throw new Error("Internal Server Error");
+        else res.json({ error: 0, updateCheck: true, token });
+      });
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send("Internal Server Error");
@@ -147,9 +208,16 @@ const buyItem = async (req, res) => {
 };
 
 const authDID = (req, res) => {
-  console.log("hi");
-  const redirect_URI = "http://localhost:4001/api/user/redirectURI/";
-  const client_ID = "f41a5fd7e7dc46239aebf23f0b47047e";
+  const redirect_URI = process.env.REDIRECT_URI;
+  const client_ID = process.env.CLIENT_ID;
+  res.redirect(
+    `http://localhost:8000/authorizor/auth?redirectURI=${redirect_URI}&clientID=${client_ID}`
+  );
+};
+
+const DIDlogin = (req, res) => {
+  const redirect_URI = process.env.REDIRECT_URI;
+  const client_ID = process.env.CLIENT_ID;
   res.redirect(
     `http://localhost:8000/authorizor/auth?redirectURI=${redirect_URI}&clientID=${client_ID}`
   );
@@ -157,27 +225,197 @@ const authDID = (req, res) => {
 
 const redirectURI = async (req, res) => {
   const { code } = req.query;
-  const response = await axios.post("http://localhost:8000/authorizor/token", {
-    code,
-  });
-  console.log(response.data);
-  const token = response.data;
+  const { CHANNEL_Token } = req.cookies;
 
-  const userInfo = await axios.get("http://localhost:8000/authorizor/user", {
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  });
-  console.log(userInfo.data);
+  try {
+    if (CHANNEL_Token !== undefined) {
+      const decoded = jwt.verify(CHANNEL_Token, process.env.SALT);
+      const response = await axios.post(
+        "http://localhost:8000/authorizor/token",
+        {
+          code,
+        }
+      );
+
+      const token = response.data;
+      const userData = await axios.get(
+        "http://localhost:8000/authorizor/user",
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const { userCode } = userData.data;
+      const checkDIDauth = await User.find({
+        userCode,
+      });
+      if (checkDIDauth.length >= 1) {
+        res.clearCookie("DID_ACCESS_TOKEN");
+        res.clearCookie("DID_REFRESH_TOKEN");
+        res.redirect(`http://localhost:3001?authDID=${false}`);
+        return;
+      }
+
+      const user = await User.findOne({ userId: decoded.userId }).exec();
+      if (user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { userId: user.userId },
+          { userCode: userData.data.userCode },
+          { new: true }
+        );
+        const { userCode, userId, point } = updatedUser;
+        const updatedUserInfo = { userCode, userId, point };
+        const secretKey = process.env.SALT;
+        const options = { expiresIn: "7d" };
+
+        jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+          if (err) {
+            console.log(err);
+            throw new Error("Internal Server Error");
+          } else {
+            res.cookie("CHANNEL_Token", token, {
+              maxAge: 1000 * 60 * 60 * 24 * 7,
+            });
+            res.redirect("http://localhost:3001");
+          }
+        });
+      } else {
+        const userInfo = { userCode, userId: "", point: 0 };
+        const secretKey = process.env.SALT;
+        const options = { expiresIn: "7d" };
+
+        jwt.sign(userInfo, secretKey, options, (err, token) => {
+          if (err) {
+            console.log(err);
+            throw new Error("Internal Server Error");
+          } else {
+            res.cookie("CHANNEL_Token", token, {
+              maxAge: 1000 * 60 * 60 * 24 * 7,
+            });
+            res.redirect("http://localhost:3001");
+          }
+        });
+      }
+    } else {
+      const response = await axios.post(
+        "http://localhost:8000/authorizor/token",
+        {
+          code,
+        }
+      );
+
+      const token = response.data;
+      const userData = await axios.get(
+        "http://localhost:8000/authorizor/user",
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const { userCode } = userData.data;
+
+      const user = await User.findOne({ userCode });
+      if (user && user.userPw === "") {
+        const { userCode, userId, point } = user;
+        const userInfo = { userCode, userId, point };
+        const secretKey = process.env.SALT;
+        const options = { expiresIn: "7d" };
+
+        jwt.sign(userInfo, secretKey, options, (err, token) => {
+          if (err) {
+            console.log(err);
+            throw new Error("Internal Server Error");
+          } else {
+            res.cookie("CHANNEL_Token", token, {
+              maxAge: 1000 * 60 * 60 * 24 * 7,
+            });
+            res.redirect("http://localhost:3001");
+          }
+        });
+      } else if (user && user.userPw !== "") {
+        res.redirect(`http://localhost:3001?authDID=${false}`);
+      } else {
+        // const newUser = new User({ userCode });
+        // const userInfo = await User.create(newUser);
+
+        // console.log(userInfo);
+        // const { userId, point } = userInfo;
+        const DIDuserInfo = { userCode, userId: "", point: 0 };
+        const secretKey = process.env.SALT;
+        const options = { expiresIn: "7d" };
+
+        jwt.sign(DIDuserInfo, secretKey, options, (err, token) => {
+          if (err) {
+            console.log(err);
+            throw new Error("Internal Server Error");
+          } else {
+            res.cookie("CHANNEL_Token", token, {
+              maxAge: 1000 * 60 * 60 * 24 * 7,
+            });
+            res.redirect("http://localhost:3001");
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    res.redirect(500, "http://localhost:3001");
+  }
+};
+
+const withdrawDID = async (req, res) => {
+  const { userData } = req.body;
+  try {
+    const user = await User.findOne({ userCode: userData.userCode });
+    if (user.userPw === "") {
+      await User.deleteOne({ userCode: userData.userCode });
+      res.clearCookie("DID_ACCESS_TOKEN");
+      res.clearCookie("DID_REFRESH_TOKEN");
+      res.json({ error: 0, withdrawDIDchk: true, withdrawUser: true });
+      return;
+    }
+
+    const withdrawDIDuser = await User.findOneAndUpdate(
+      { userCode: user.userCode },
+      { userCode: "" },
+      { new: true }
+    );
+    const { userCode, userId, point } = withdrawDIDuser;
+    const updatedUserInfo = { userCode, userId, point };
+    const secretKey = process.env.SALT;
+    const options = { expiresIn: "7d" };
+
+    jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+      if (err) throw new Error("Internal Server Error");
+      else {
+        res.json({
+          error: 0,
+          withdrawDIDchk: true,
+          withdrawUser: false,
+          token,
+        });
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 1 });
+  }
 };
 
 module.exports = {
   idOverlapChk,
   regist,
+  registWithDID,
   login,
+  logout,
   sendToken,
   getPoint,
   buyItem,
   authDID,
+  withdrawDID,
   redirectURI,
+  DIDlogin,
 };

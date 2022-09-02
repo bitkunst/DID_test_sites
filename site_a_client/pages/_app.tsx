@@ -6,6 +6,7 @@ import { createContext, useEffect, useState } from "react";
 import { IGlobal, IUserData } from "../interface/user.interface";
 import { useCookies } from "react-cookie";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import Router from "next/router";
 
 export const Global = createContext<IGlobal>({});
 
@@ -35,8 +36,12 @@ function MyApp({ Component, pageProps }: AppProps) {
           }
         );
         const result = response.data;
-        setIsLogin(true);
         setUserData(result);
+        if (result.userId === "") {
+          Router.push("/registDID");
+        } else {
+          setIsLogin(true);
+        }
       } catch (err) {
         const error = err as AxiosError<any>;
         console.log(error);
@@ -51,6 +56,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     const { CHANNEL_Token: token } = cookies;
     if (token) {
       setUserToken(token);
+    }
+
+    if (window.location.search.substring(1).split("=")[1] === "false") {
+      alert("이미 인증에 사용된 DID 계정입니다. 다른 DID 계정을 사용해주세요.");
+      window.location.href = "http://localhost:4001/api/user/logout";
     }
   }, []);
 
