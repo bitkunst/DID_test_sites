@@ -1,4 +1,11 @@
-import { Box, Button, ButtonGroup, Flex, Heading } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Flex,
+  Heading,
+  Text,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import LoginModal from "./LoginModal";
 import { FunctionComponent, useContext, useEffect, useState } from "react";
@@ -6,26 +13,31 @@ import { Global } from "../pages/_app";
 import Router from "next/router";
 import { useCookies } from "react-cookie";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { deleteCookie } from "cookies-next";
 
 const Header = () => {
   const { isLogin, setIsLogin, setUserToken, userData, setUserData } =
     useContext(Global);
   const [, setCookie, removeCookie] = useCookies();
 
-  const logout = () => {
-    removeCookie("CHANNEL_Token");
-    if (
-      setIsLogin === undefined ||
-      setUserToken === undefined ||
-      setUserData === undefined
-    )
-      return;
-    setUserToken("");
-    setIsLogin(false);
-    setUserData({});
-    alert("로그아웃 되었습니다.");
-    Router.push("/");
-  };
+  // const logout = async () => {
+  //   removeCookie("CHANNEL_Token");
+  //   // deleteCookie("DID_ACCESS_TOKEN");
+  //   // deleteCookie("DID_REFRESH_TOKEN");
+  //   // const response = await axios.get("http://localhost:4001/api/user/logout");
+
+  //   if (
+  //     setIsLogin === undefined ||
+  //     setUserToken === undefined ||
+  //     setUserData === undefined
+  //   )
+  //     return;
+  //   setUserToken("");
+  //   setIsLogin(false);
+  //   setUserData({});
+  //   alert("로그아웃 되었습니다.");
+  //   Router.push("/");
+  // };
 
   const getPoint = async () => {
     if (!isLogin) {
@@ -54,8 +66,44 @@ const Header = () => {
     }
   };
 
-  const authDID = async () => {
-    const response = await axios.get("http://localhost:4001/api/user/authDID");
+  const withdrawDID = async () => {
+    if (
+      setUserToken === undefined ||
+      setUserData === undefined ||
+      setIsLogin === undefined
+    )
+      return;
+
+    try {
+      const response = await axios.post(
+        "http://localhost:4001/api/user/withdrawDID",
+        {
+          userData,
+        }
+      );
+
+      const { error, withdrawDIDchk, withdrawUser, token } = response.data;
+      if (!error && withdrawDIDchk) {
+        setUserToken(token);
+        setCookie("CHANNEL_Token", token);
+        alert("DID 인증이 철회되었습니다.");
+        window.location.href = "http://localhost:4001/api/user/logout";
+      }
+      if (!error && withdrawUser) {
+        setIsLogin(false);
+        removeCookie("CHANNEL_Token");
+        setUserToken("");
+        setUserData({});
+        alert("DID 로그인 인증이 철회되었습니다.");
+        window.location.href = "http://localhost:4001/api/user/logout";
+      }
+    } catch (err) {
+      const error = err as AxiosError<any>;
+      console.log(error);
+      alert(
+        "DID 인증 철회가 정상적으로 처리되지 않았습니다. 다시 시도해주세요. "
+      );
+    }
   };
 
   return (
@@ -86,14 +134,39 @@ const Header = () => {
               {/* {userData?.point !== undefined && (
                 <span>내 포인트 : {point}</span>
               )} */}
-              <span>내 포인트 : </span>
-              {userData?.point}
-              <Button colorScheme="blackAlpha" onClick={logout}>
+              <Flex direction="column">
+                <Text>내 포인트 : {userData?.point}</Text>
+                {userData?.userCode !== "" && (
+                  <>
+                    <Text fontWeight="extrabold" color="#319795">
+                      DID 인증 완료
+                    </Text>
+                  </>
+                )}
+              </Flex>
+
+              <form method="get" action="http://localhost:4001/api/user/logout">
+                <Button colorScheme="blackAlpha" type="submit">
+                  Logout
+                </Button>
+              </form>
+              {/* <Button colorScheme="blackAlpha" onClick={logout}>
                 Logout
-              </Button>
-              <Link href="http://localhost:4001/api/user/authDID">
-                <Button colorScheme="red">DID 인증하기</Button>
-              </Link>
+              </Button> */}
+
+              {userData?.userCode !== "" && (
+                <Button colorScheme="red" onClick={withdrawDID}>
+                  인증 철회
+                </Button>
+              )}
+
+              {userData?.userCode === "" && (
+                <>
+                  <Link href="http://localhost:4001/api/user/authDID">
+                    <Button colorScheme="teal">DID 인증하기</Button>
+                  </Link>
+                </>
+              )}
             </>
           )}
         </ButtonGroup>
