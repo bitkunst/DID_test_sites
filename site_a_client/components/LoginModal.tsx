@@ -17,6 +17,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import Router from "next/router";
 import { useCookies } from "react-cookie";
 import { Global } from "../pages/_app";
+import Link from "next/link";
+import { setCookies } from "cookies-next";
 
 function LoginModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -91,7 +93,9 @@ function LoginModal() {
 
             <ModalFooter display="flex" justifyContent="space-between">
               <Box>
-                <Button colorScheme="teal">DID Login</Button>
+                <Link href="http://localhost:4001/api/user/DIDlogin">
+                  <Button colorScheme="teal">DID Login</Button>
+                </Link>
               </Box>
               <Box alignSelf="flex-end">
                 <Button type="submit" colorScheme="blackAlpha" mr={3}>
