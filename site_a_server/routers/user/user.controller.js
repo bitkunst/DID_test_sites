@@ -405,6 +405,36 @@ const withdrawDID = async (req, res) => {
   }
 };
 
+const viewPoint = async (req, res) => {
+  const { userCode } = req.body;
+
+  try {
+    const user = await User.findOne({ userCode });
+
+    res.json({ error: 0, userCode: user.userCode, point: user.point });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const allowPoint = async (req, res) => {
+  const { userCode, point } = req.body;
+
+  try {
+    const user = await User.findOne({ userCode });
+
+    const result = await User.findOneAndUpdate(
+      { userCode },
+      { point: user.point - point },
+      { new: true }
+    );
+
+    res.json({ error: 0, userCode: result.userCode, point: result.point });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   idOverlapChk,
   regist,
@@ -418,4 +448,6 @@ module.exports = {
   withdrawDID,
   redirectURI,
   DIDlogin,
+  viewPoint,
+  allowPoint,
 };
