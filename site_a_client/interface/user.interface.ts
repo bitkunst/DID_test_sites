@@ -1,10 +1,16 @@
 import { Dispatch, SetStateAction } from "react";
 
+export interface IDIDpoint {
+  a_idx: string;
+  name: string;
+  pt: string;
+}
+
 export interface IUserData {
   userCode?: string;
   userId?: string;
   point?: number;
-  isVerified?: boolean;
+  DIDpoint?: IDIDpoint[];
 }
 
 export interface IGlobal {
