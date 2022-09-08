@@ -26,4 +26,8 @@ router.get("/DIDlogin", userController.DIDlogin);
 
 router.get("/redirectURI", userController.redirectURI);
 
+router.post("/viewPoint", userController.viewPoint);
+
+router.post("/allowPoint", userController.allowPoint);
+
 module.exports = router;
