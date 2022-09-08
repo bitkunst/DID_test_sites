@@ -33,6 +33,15 @@ type itemType = {
   [key: string]: Item;
 };
 
+const DIDpoint = [
+  { a_idx: "1", name: "kong", pt: "500" },
+  { a_idx: "2", name: "sj", pt: "1000" },
+  { a_idx: "3", name: "jongs", pt: "300" },
+  { a_idx: "4", name: "jujan", pt: "1000" },
+  { a_idx: "5", name: "won", pt: "700" },
+  { a_idx: "6", name: "upbit", pt: "100" },
+];
+
 const PayModal: React.FC<ModalProps> = ({ isOpen, onClose, num }) => {
   const item: itemType = itemJSON;
 
@@ -55,11 +64,13 @@ const PayModal: React.FC<ModalProps> = ({ isOpen, onClose, num }) => {
       return;
     }
     if (setUserToken === undefined) return;
+    const { value } = e.target.DIDpoint;
+    console.log(value);
 
     try {
       const response = await axios.post(
         "http://localhost:4001/api/user/buyItem",
-        { userData, itemPrice: property.formattedPrice }
+        { userData, itemPrice: property.formattedPrice, a_idx: value }
       );
       const { error, result, token } = response.data;
       if (error && !result) {
@@ -77,6 +88,16 @@ const PayModal: React.FC<ModalProps> = ({ isOpen, onClose, num }) => {
         "상품 구매가 정상적으로 처리되지 않았습니다. 잠시후 다시 시도해주십시요."
       );
     }
+  };
+
+  const pointList = () => {
+    return DIDpoint.map((v, i) => {
+      return (
+        <Radio colorScheme="green" value={v.a_idx} key={i}>
+          {v.name} ( 보유 포인트 : {v.pt} )
+        </Radio>
+      );
+    });
   };
 
   return (
@@ -114,14 +135,13 @@ const PayModal: React.FC<ModalProps> = ({ isOpen, onClose, num }) => {
                   </Text>
                 </Flex>
                 <Box>
-                  <RadioGroup onChange={setSite} value={site}>
+                  <RadioGroup name="DIDpoint">
                     <Stack spacing={5} direction="column">
-                      <Radio name="CHANNEL" colorScheme="green" value="CHANNEL">
+                      <Radio colorScheme="green" value={"local"}>
                         CHANNEL ( 보유 포인트 : {userData?.point} )
                       </Radio>
-                      <Radio colorScheme="green" value="siteB">
-                        siteB
-                      </Radio>
+                      {/* 여기에 추가 */}
+                      {pointList()}
                     </Stack>
                   </RadioGroup>
                 </Box>
