@@ -3,6 +3,7 @@ const cors = require('cors');
 const { pool } = require('./models/db/db.js');
 const did = require('./did');
 const cookieParser = require('cookie-parser');
+const axios = require('axios');
 
 const app = express();
 
@@ -125,6 +126,20 @@ app.post('/did/disconnect', async (req, res) => {
     } else {
       res.sendStatus(500);
     }
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/did/checkPoint', async (req, res) => {
+  const { userCode } = req.body;
+  try {
+    console.log('run!');
+    const response = await axios.post('http://localhost:4000/app/checkPoint', {
+      userCode,
+    });
+    console.log(response.data);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);

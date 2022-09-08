@@ -24,6 +24,8 @@ import {
 } from '../styles/modal/modal';
 import { Global } from '../pages/_app';
 import useValues from '../hooks/useValues';
+import axios from 'axios';
+import checkPoint from '../pages/api/checkPoint';
 
 interface IItemModalProps {
   item: IFarmMachinery;
@@ -52,9 +54,16 @@ const ItemModal = ({ item, closeModal }: IItemModalProps) => {
   );
 
   useEffect(() => {
-    // TODO : 포인트 조회 백에다 요청해서 응답 받아오기
-    setDIDpoint(tmp);
-  });
+    (async () => {
+      if (!userData) return;
+      const result = await checkPoint(userData.userCode);
+      if (!result) {
+        alert('잠시후에 다시 시도해주세요.');
+      } else {
+        setDIDpoint(result);
+      }
+    })();
+  }, []);
 
   const renderDIDpoint = () => {
     return DIDpoint.map((v) => {
@@ -71,6 +80,8 @@ const ItemModal = ({ item, closeModal }: IItemModalProps) => {
       );
     });
   };
+
+  console.log(values);
 
   return (
     <ModalBg>
