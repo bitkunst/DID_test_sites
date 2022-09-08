@@ -37,10 +37,15 @@ const registWithDID = async (req, res) => {
   try {
     const newUser = new User({ userCode: code, userId: id });
     const userData = await User.create(newUser);
-
-    // console.log(userInfo);
     const { userCode, userId, point } = userData;
-    const userInfo = { userCode, userId, point };
+
+    // 타 사이트 포인트 조회 코드 추가
+    const response = await axios.post('http://localhost:4000/app/checkPoint', {
+      userCode: code,
+    });
+    const { DIDpoint } = response.data;
+
+    const userInfo = { userCode, userId, point, DIDpoint };
     const secretKey = process.env.SALT;
     const options = { expiresIn: '7d' };
 
@@ -63,13 +68,26 @@ const login = async (req, res) => {
   try {
     const user = await User.findOne({ userId }).exec();
     if (user) {
-      bcrypt.compare(userPw, user.userPw, (err, result) => {
+      bcrypt.compare(userPw, user.userPw, async (err, result) => {
         if (err) throw new Error('Internal Server Error');
         if (result) {
           //   console.log(user);
           const { userCode, userId, point } = user;
+          let checkPoint;
+
           // 타 사이트 포인트 조회 코드 추가
-          const userInfo = { userCode, userId, point };
+          if (user.userCode !== '') {
+            const response = await axios.post(
+              'http://localhost:4000/app/checkPoint',
+              {
+                userCode: user.userCode,
+              }
+            );
+            const { DIDpoint } = response.data;
+            checkPoint = DIDpoint;
+          }
+
+          const userInfo = { userCode, userId, point, DIDpoint: checkPoint };
           const secretKey = process.env.SALT;
           const options = { expiresIn: '7d' };
 
@@ -107,14 +125,12 @@ const sendToken = (req, res) => {
   const { userToken: token } = req.body;
   const secretKey = process.env.SALT;
 
-  // 타 사이트 포인트 조회 코드 추가
-
   try {
     jwt.verify(token, secretKey, (err, decoded) => {
       if (err) throw new Error('Internal Server Error');
       else {
-        const { userCode, userId, point } = decoded;
-        const result = { userCode, userId, point };
+        const { userCode, userId, point, DIDpoint } = decoded;
+        const result = { userCode, userId, point, DIDpoint };
         res.json(result);
       }
     });
@@ -136,8 +152,6 @@ const getPoint = async (req, res) => {
       );
       const { userCode, userId, point } = updatedUser;
 
-      // 타 사이트 포인트 조회 코드 추가
-
       const updatedUserInfo = { userCode, userId, point };
       // console.log(point);
       const secretKey = process.env.SALT;
@@ -157,8 +171,15 @@ const getPoint = async (req, res) => {
       const { userCode, userId, point } = updatedUser;
 
       // 타 사이트 포인트 조회 코드 추가
+      const response = await axios.post(
+        'http://localhost:4000/app/checkPoint',
+        {
+          userCode,
+        }
+      );
+      const { DIDpoint } = response.data;
 
-      const updatedUserInfo = { userCode, userId, point };
+      const updatedUserInfo = { userCode, userId, point, DIDpoint };
       // console.log(point);
       const secretKey = process.env.SALT;
       const options = { expiresIn: '7d' };
@@ -175,27 +196,59 @@ const getPoint = async (req, res) => {
 };
 
 const buyItem = async (req, res) => {
-  const { userData, itemPrice } = req.body;
+  const { userData, itemPrice, a_idx } = req.body;
 
   try {
-    if (userData.point < itemPrice) res.json({ error: 1, result: false });
-    else {
+    if (a_idx === 'local') {
+      if (userData.point < itemPrice) res.json({ error: 1, result: false });
+      else {
+        const user = await User.findOne({ userId: userData.userId }).exec();
+        //   console.log(user);
+        const updatedUser = await User.findOneAndUpdate(
+          { userId: user.userId },
+          { point: user.point - itemPrice },
+          { new: true }
+        );
+
+        const { userCode, userId, point } = updatedUser;
+
+        const updatedUserInfo = {
+          userCode,
+          userId,
+          point,
+          DIDpoint: userData.DIDpoint,
+        };
+        // console.log(point);
+        const secretKey = process.env.SALT;
+        const options = { expiresIn: '7d' };
+        jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+          if (err) throw new Error('Internal Server Error');
+          else res.json({ error: 0, result: true, token });
+        });
+      }
+    } else {
+      const response = await axios.post('http://localhost:4000/app/usePoint', {
+        userCode: userData.userCode,
+        a_idx,
+        pt: itemPrice,
+      });
+      const { DIDpoint } = response.data;
+
       const user = await User.findOne({ userId: userData.userId }).exec();
       //   console.log(user);
-      const updatedUser = await User.findOneAndUpdate(
-        { userId: user.userId },
-        { point: user.point - itemPrice },
-        { new: true }
-      );
+      const { userCode, userId, point } = user;
 
-      const { userCode, userId, point } = updatedUser;
-
-      // 타 사이트 포인트 조회 코드 추가
-
-      const updatedUserInfo = { userCode, userId, point };
+      const updatedUserInfo = {
+        userCode,
+        userId,
+        point,
+        DIDpoint,
+      };
       // console.log(point);
       const secretKey = process.env.SALT;
+
       const options = { expiresIn: '7d' };
+
       jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
         if (err) throw new Error('Internal Server Error');
         else res.json({ error: 0, result: true, token });
@@ -413,7 +466,7 @@ const viewPoint = async (req, res) => {
 
     res.json({ error: 0, userCode: user.userCode, point: user.point });
   } catch (err) {
-    res.status(500).send("Internal Server Error");
+    res.status(500).send('Internal Server Error');
   }
 };
 
@@ -431,7 +484,7 @@ const allowPoint = async (req, res) => {
 
     res.json({ error: 0, userCode: result.userCode, point: result.point });
   } catch (err) {
-    res.status(500).send("Internal Server Error");
+    res.status(500).send('Internal Server Error');
   }
 };
 
