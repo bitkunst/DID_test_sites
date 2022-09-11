@@ -229,8 +229,7 @@ const buyItem = async (req, res) => {
     } else {
       const response = await axios.post('http://localhost:4000/app/usePoint', {
         userCode: userData.userCode,
-        a_idx,
-        pt: itemPrice,
+        data: [{ [a_idx]: itemPrice }],
       });
       const { DIDpoint } = response.data;
 
@@ -464,7 +463,7 @@ const viewPoint = async (req, res) => {
   try {
     const user = await User.findOne({ userCode });
 
-    res.json({ error: 0, userCode: user.userCode, point: user.point });
+    res.json({ error: 0, pt: user.point });
   } catch (err) {
     res.status(500).send('Internal Server Error');
   }

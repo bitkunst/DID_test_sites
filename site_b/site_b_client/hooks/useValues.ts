@@ -1,12 +1,24 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useState } from 'react';
 import { IDIDpoint } from '../components/itemModal';
+import purchase from '../pages/api/purchase';
+import { Global } from '../pages/_app';
+import Router from 'next/router';
 
 interface IErrors {
   [key: string]: string;
 }
 
-const useValues = (price: number, DIDpoint: IDIDpoint[]) => {
-  const [values, setValues] = useState({});
+interface IValues {
+  [key: string | number]: string;
+}
+
+const useValues = (
+  price: number,
+  DIDpoint: IDIDpoint[],
+  closeModal: () => void
+) => {
+  const { userData, setUserData } = useContext(Global);
+  const [values, setValues] = useState<IValues>({});
   const [errors, setErrors] = useState<IErrors>({});
   const [isPurchase, setIsPurchase] = useState<boolean>(false);
 
@@ -18,7 +30,7 @@ const useValues = (price: number, DIDpoint: IDIDpoint[]) => {
   const validation = () => {
     const newErrors: IErrors = {};
 
-    const valueArr: number[] = Object.values(values);
+    const valueArr: number | string[] = Object.values(values);
 
     const entryArr = Object.entries(values);
 
@@ -52,13 +64,21 @@ const useValues = (price: number, DIDpoint: IDIDpoint[]) => {
   };
 
   useEffect(() => {
-    if (!isPurchase) return;
+    if (!isPurchase || !userData) return;
 
     if (Object.keys(errors).length) return;
 
-    // TODO: 구매 라우터 요청/응답
-
-    console.log('구매성공!!');
+    (async () => {
+      const { userCode } = userData;
+      const result = await purchase(values, userCode);
+      if (result && setUserData) {
+        setUserData({ ...userData, pt: userData.pt - Number(values.local) });
+        closeModal();
+        alert('구매 성공!');
+      } else {
+        alert('구매 실패');
+      }
+    })();
   }, [errors]);
 
   return { values, controllValues, errors, controllPurchase };

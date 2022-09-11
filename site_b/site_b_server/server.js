@@ -135,11 +135,37 @@ app.post('/did/disconnect', async (req, res) => {
 app.post('/did/checkPoint', async (req, res) => {
   const { userCode } = req.body;
   try {
-    console.log('run!');
-    const response = await axios.post('http://localhost:4000/app/checkPoint', {
+    const result = await did.checkPoint(userCode);
+    res.json({ points: result });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/purchase', async (req, res) => {
+  const {
+    values: { local, ...points },
+    userCode,
+  } = req.body;
+
+  try {
+    const response = await axios.post('http://localhost:4000/app/usePoint', {
+      points,
       userCode,
     });
-    console.log(response.data);
+
+    if (response.data) {
+      const sql = `
+      UPDATE user SET pt=pt-${local}
+      WHERE userCode ="${userCode}"
+      `;
+
+      await pool.query(sql);
+      res.send(true);
+    } else {
+      throw new Error('internal errror');
+    }
   } catch (error) {
     console.log(error);
     res.sendStatus(500);

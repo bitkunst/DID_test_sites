@@ -7,7 +7,7 @@ const checkPoint = async (userCode: string) => {
       'http://localhost:8080/did/checkPoint',
       body
     );
-    return response.data;
+    return response.data.points;
   } catch (error) {
     console.log(error);
     return false;

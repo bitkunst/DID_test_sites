@@ -24,7 +24,6 @@ import {
 } from '../styles/modal/modal';
 import { Global } from '../pages/_app';
 import useValues from '../hooks/useValues';
-import axios from 'axios';
 import checkPoint from '../pages/api/checkPoint';
 
 interface IItemModalProps {
@@ -38,19 +37,14 @@ export interface IDIDpoint {
   pt: number;
 }
 
-const tmp: IDIDpoint[] = [
-  { a_idx: 1, name: 'carrot', pt: 200000 },
-  { a_idx: 2, name: 'egg plant', pt: 300000 },
-  { a_idx: 3, name: 'cucumber', pt: 400000 },
-];
-
 const ItemModal = ({ item, closeModal }: IItemModalProps) => {
   const [DIDpoint, setDIDpoint] = useState<IDIDpoint[]>([]);
   const { userData } = useContext(Global);
 
   const { values, controllValues, errors, controllPurchase } = useValues(
     item.price,
-    DIDpoint
+    DIDpoint,
+    closeModal
   );
 
   useEffect(() => {
@@ -80,8 +74,6 @@ const ItemModal = ({ item, closeModal }: IItemModalProps) => {
       );
     });
   };
-
-  console.log(values);
 
   return (
     <ModalBg>
