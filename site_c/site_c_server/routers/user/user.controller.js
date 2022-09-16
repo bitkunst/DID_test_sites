@@ -76,15 +76,13 @@ const login = async (req, res) => {
           let checkPoint;
 
           // 타 사이트 포인트 조회 코드 추가
-          console.log(user.userCode);
           if (user.userCode !== "") {
-            const response = await axios
-              .post("http://3.38.58.1:4000/app/checkPoint", {
+            const response = await axios.post(
+              "http://3.38.58.1:4000/app/checkPoint",
+              {
                 userCode: user.userCode,
-                clientId: process.env.CLIENT_ID,
-              })
-              .catch((e) => console.log(e));
-            console.log(response.data);
+              }
+            );
             const { DIDpoint } = response.data;
             checkPoint = DIDpoint;
           }
