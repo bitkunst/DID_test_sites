@@ -106,7 +106,7 @@ app.get('/did/redirect', async (req, res) => {
     res.redirect('http://localhost:3001/');
   } catch (error) {
     console.log(error);
-    res.redirect('http://localhost:3001/DIDerror');
+    res.redirect('http://localhost:3001/');
   }
 });
 
