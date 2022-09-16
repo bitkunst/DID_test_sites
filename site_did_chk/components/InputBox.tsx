@@ -35,6 +35,7 @@ const InputBox: React.FC<PropsType> = ({ web3, account }) => {
   const [isUser, setIsUser] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const DIDjson: JsonType = DID_L1;
+  console.log(web3);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -51,7 +52,7 @@ const InputBox: React.FC<PropsType> = ({ web3, account }) => {
 
   useEffect(() => {
     (async () => {
-      if (deployed || !web3) return;
+      if (!web3) return;
 
       const networkId = await web3.eth.net.getId();
       const CA = DIDjson.networks[networkId].address;
@@ -61,7 +62,7 @@ const InputBox: React.FC<PropsType> = ({ web3, account }) => {
       web3.eth.subscribe("logs", { address: CA }).on("data", (log) => {
         const params = [{ type: "bool", name: "check" }];
         const value = web3.eth.abi.decodeLog(params, log.data, []);
-        // console.log(value.check);
+
         setIsUser(value.check);
         setIsLoading(false);
       });
