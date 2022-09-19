@@ -34,7 +34,7 @@ app.listen(4003, async () => {
     mongoose.connection.on("connected", () => {
       console.log("Successfully connected to MongoDB");
     });
-    console.log("site A server #port : 4003");
+    console.log("site C back server #port : 4003");
   } catch (err) {
     console.log(err);
   }
