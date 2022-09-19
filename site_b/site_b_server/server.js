@@ -93,7 +93,7 @@ app.get("/did/redirect", async (req, res) => {
     const [[user]] = await pool.query(selectSql);
 
     if (user) {
-      res.redirect("http://localhost:3001/duplicateDidError");
+      res.redirect("http://localhost:3002/duplicateDidError");
       return;
     }
 
@@ -103,10 +103,10 @@ app.get("/did/redirect", async (req, res) => {
     WHERE _id='${B_SITE_COOKIE}'
     `;
     await pool.query(sql);
-    res.redirect("http://localhost:3001/");
+    res.redirect("http://localhost:3002/");
   } catch (error) {
     console.log(error);
-    res.redirect("http://localhost:3001/DIDerror");
+    res.redirect('http://localhost:3002/');
   }
 });
 
