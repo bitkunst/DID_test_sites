@@ -384,9 +384,18 @@ const redirectURI = async (req, res) => {
       const user = await User.findOne({ userCode });
       if (user && user.userPw === "") {
         const { userCode, userId, point } = user;
-        const userInfo = { userCode, userId, point };
         const secretKey = process.env.SALT;
         const options = { expiresIn: "7d" };
+        const response = await axios.post(
+          "http://3.38.58.1:4000/app/checkPoint",
+          {
+            userCode,
+            clientId: process.env.CLIENT_ID,
+          }
+        );
+        const DIDpoint = response.data;
+
+        const userInfo = { userCode, userId, point, DIDpoint };
 
         jwt.sign(userInfo, secretKey, options, (err, token) => {
           if (err) {
@@ -407,7 +416,7 @@ const redirectURI = async (req, res) => {
 
         // console.log(userInfo);
         // const { userId, point } = userInfo;
-        const DIDuserInfo = { userCode, userId: "", point: 0 };
+        const DIDuserInfo = { userCode, userId: "", point: 0, DIDpoint: [] };
         const secretKey = process.env.SALT;
         const options = { expiresIn: "7d" };
 
@@ -448,7 +457,7 @@ const withdrawDID = async (req, res) => {
       { new: true }
     );
     const { userCode, userId, point } = withdrawDIDuser;
-    const updatedUserInfo = { userCode, userId, point };
+    const updatedUserInfo = { userCode, userId, point, DIDpoint: [] };
     const secretKey = process.env.SALT;
     const options = { expiresIn: "7d" };
 
