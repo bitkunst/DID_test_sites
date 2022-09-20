@@ -91,7 +91,8 @@ const PayModal: React.FC<ModalProps> = ({ isOpen, onClose, num }) => {
   };
 
   const pointList = () => {
-    return DIDpoint.map((v, i) => {
+    if (userData == undefined) return;
+    return userData.DIDpoint?.map((v, i) => {
       return (
         <Radio colorScheme="green" value={v.a_idx} key={i}>
           {v.name} ( 보유 포인트 : {v.pt} )
