@@ -232,29 +232,38 @@ const buyItem = async (req, res) => {
     } else {
       const response = await axios.post("http://3.38.58.1:4000/app/usePoint", {
         userCode: userData.userCode,
-        data: [{ [a_idx]: itemPrice }],
+        points: { [a_idx]: itemPrice },
       });
-      const DIDpoint = response.data;
 
-      const user = await User.findOne({ userId: userData.userId }).exec();
-      //   console.log(user);
-      const { userCode, userId, point } = user;
+      if (response.data) {
+        const user = await User.findOne({ userId: userData.userId }).exec();
+        //   console.log(user);
+        const { userCode, userId, point } = user;
+        const response = await axios.post(
+          "http://3.38.58.1:4000/app/checkPoint",
+          {
+            userCode: userData.userCode,
+            clientId: process.env.CLIENT_ID,
+          }
+        );
+        const DIDpoint = response.data;
 
-      const updatedUserInfo = {
-        userCode,
-        userId,
-        point,
-        DIDpoint,
-      };
-      // console.log(point);
-      const secretKey = process.env.SALT;
+        const updatedUserInfo = {
+          userCode,
+          userId,
+          point,
+          DIDpoint,
+        };
+        // console.log(point);
+        const secretKey = process.env.SALT;
 
-      const options = { expiresIn: "7d" };
+        const options = { expiresIn: "7d" };
 
-      jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
-        if (err) throw new Error("Internal Server Error");
-        else res.json({ error: 0, result: true, token });
-      });
+        jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
+          if (err) throw new Error("Internal Server Error");
+          else res.json({ error: 0, result: true, token });
+        });
+      }
     }
   } catch (err) {
     console.log(err);
