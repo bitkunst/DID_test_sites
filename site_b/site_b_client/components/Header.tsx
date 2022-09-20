@@ -41,7 +41,7 @@ const Header = () => {
   }, [account]);
 
   const moveToDID = () => {
-    location.href = 'http://localhost:8080/DID';
+    location.href = 'http://localhost:4002/DID';
   };
 
   const disconnect = async () => {

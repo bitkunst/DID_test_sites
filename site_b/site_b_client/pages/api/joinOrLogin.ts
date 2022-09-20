@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const joinOrLogin = async (address: string): Promise<any> => {
   try {
-    const response = await axios.post('http://localhost:8080/user', {
+    const response = await axios.post('http://localhost:4002/user', {
       address,
     });
     return response.data;

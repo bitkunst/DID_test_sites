@@ -3,7 +3,7 @@ import axios from 'axios';
 const disconnectFromApp = async (userCode: string) => {
   try {
     const response = await axios.post(
-      'http://localhost:8080/did/disconnect',
+      'http://localhost:4002/did/disconnect',
       {
         userCode,
       },
