@@ -103,10 +103,10 @@ app.get('/did/redirect', async (req, res) => {
     WHERE _id='${B_SITE_COOKIE}'
     `;
     await pool.query(sql);
-    res.redirect('http://localhost:3001/');
+    res.redirect('http://localhost:3002/');
   } catch (error) {
     console.log(error);
-    res.redirect('http://localhost:3001/');
+    res.redirect('http://localhost:3002/');
   }
 });
 
@@ -126,6 +126,18 @@ app.post('/did/disconnect', async (req, res) => {
     } else {
       res.sendStatus(500);
     }
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/did/pointInfo', async (req, res) => {
+  const { userCode } = req.body;
+  try {
+    const sql = `select pt from user where userCode="${userCode}"`;
+    const [[result]] = await pool.query(sql);
+    res.json(result);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
