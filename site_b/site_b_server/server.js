@@ -184,8 +184,14 @@ app.post('/purchase', async (req, res) => {
   }
 });
 
-app.get('/test', (req, res) => {
-  res.send('hello ㄴㄴ');
+app.post('/did/allowPoint', async (req, res) => {
+  console.log('asdfasdfasd');
+  const { userCode, point } = req.body;
+  try {
+    const sql = `UPDATE user SET pt=pt-${point} WHERE userCode="${userCode}"`;
+    await pool.query(sql);
+    res.send(true);
+  } catch (error) {}
 });
 
 app.listen(4002);
