@@ -6,7 +6,7 @@ interface IValues {
 
 const purchase = async (values: IValues, userCode: string) => {
   try {
-    const response = await axios.post('http://localhost:8080/purchase', {
+    const response = await axios.post('http://localhost:4002/purchase', {
       values,
       userCode,
     });

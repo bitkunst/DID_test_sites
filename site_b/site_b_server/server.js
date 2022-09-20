@@ -162,7 +162,7 @@ app.post('/purchase', async (req, res) => {
   } = req.body;
 
   try {
-    const response = await axios.post('http://localhost:4000/app/usePoint', {
+    const response = await axios.post('http://3.38.58.1:4000/app/usePoint', {
       points,
       userCode,
     });
@@ -182,6 +182,10 @@ app.post('/purchase', async (req, res) => {
     console.log(error);
     res.sendStatus(500);
   }
+});
+
+app.get('/test', (req, res) => {
+  res.send('hello ㄴㄴ');
 });
 
 app.listen(4002);

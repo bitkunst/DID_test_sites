@@ -4,7 +4,7 @@ const checkPoint = async (userCode: string) => {
   const body = { userCode };
   try {
     const response = await axios.post(
-      'http://localhost:8080/did/checkPoint',
+      'http://localhost:4002/did/checkPoint',
       body
     );
     return response.data.points;

@@ -7,7 +7,7 @@ export interface IRegistAlias {
 
 const registAlias = async (payload: IRegistAlias) => {
   try {
-    const response = await axios.post('http://localhost:8080/alias', payload);
+    const response = await axios.post('http://localhost:4002/alias', payload);
     return response.data;
   } catch (error) {
     console.log('regist Alias axios error');
