@@ -372,7 +372,7 @@ const redirectURI = async (req, res) => {
 
       const token = response.data;
       const userData = await axios.get(
-        "http://13.124.189.38:8000/authorizor/user",
+        `http://13.124.189.38:8000/authorizor/user?clientID=${process.env.CLIENT_ID}`,
         {
           headers: {
             authorization: `Bearer ${token}`,
@@ -440,19 +440,25 @@ const redirectURI = async (req, res) => {
 };
 
 const withdrawDID = async (req, res) => {
-  const { userData } = req.body;
+  const { userCode: code } = req.query;
+  // const { userData } = req.body;
   try {
-    const user = await User.findOne({ userCode: userData.userCode });
+    const user = await User.findOne({ userCode: code });
     if (user.userPw === "") {
-      await User.deleteOne({ userCode: userData.userCode });
-      res.clearCookie("DID_ACCESS_TOKEN");
-      res.clearCookie("DID_REFRESH_TOKEN");
-      res.json({ error: 0, withdrawDIDchk: true, withdrawUser: true });
+      await User.deleteOne({ userCode: code });
+
+      res.clearCookie("CHANNEL_Token");
+      res.redirect(
+        `http://13.124.189.38:8000/authorizor/disconnect?clientID=${process.env.CLIENT_ID}&userCode=${code}`
+      );
+      // res.clearCookie("DID_ACCESS_TOKEN");
+      // res.clearCookie("DID_REFRESH_TOKEN");
+      // res.json({ error: 0, withdrawDIDchk: true, withdrawUser: true });
       return;
     }
 
     const withdrawDIDuser = await User.findOneAndUpdate(
-      { userCode: user.userCode },
+      { userCode: code },
       { userCode: "" },
       { new: true }
     );
@@ -464,17 +470,17 @@ const withdrawDID = async (req, res) => {
     jwt.sign(updatedUserInfo, secretKey, options, (err, token) => {
       if (err) throw new Error("Internal Server Error");
       else {
-        res.json({
-          error: 0,
-          withdrawDIDchk: true,
-          withdrawUser: false,
-          token,
+        res.cookie("CHANNEL_Token", token, {
+          maxAge: 1000 * 60 * 60 * 24 * 7,
         });
+        res.redirect(
+          `http://13.124.189.38:8000/authorizor/disconnect?clientID=${process.env.CLIENT_ID}&userCode=${code}`
+        );
       }
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: 1 });
+    res.status(500).send("Internal Server Error");
   }
 };
 
