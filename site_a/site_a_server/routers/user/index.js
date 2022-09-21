@@ -20,7 +20,7 @@ router.post("/buyItem", userController.buyItem);
 
 router.get("/authDID", userController.authDID);
 
-router.post("/withdrawDID", userController.withdrawDID);
+router.get("/withdrawDID", userController.withdrawDID);
 
 router.get("/DIDlogin", userController.DIDlogin);
 

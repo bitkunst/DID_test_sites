@@ -75,28 +75,29 @@ const Header = () => {
       return;
 
     try {
-      const response = await axios.post(
-        "http://localhost:4001/api/user/withdrawDID",
-        {
-          userData,
-        }
-      );
+      // const response = await axios.post(
+      //   "http://localhost:4001/api/user/withdrawDID",
+      //   {
+      //     userData,
+      //   }
+      // );
 
-      const { error, withdrawDIDchk, withdrawUser, token } = response.data;
-      if (!error && withdrawDIDchk) {
-        setUserToken(token);
-        setCookie("CHANNEL_Token", token);
-        alert("DID 인증이 철회되었습니다.");
-        window.location.href = "http://localhost:4001/api/user/logout";
-      }
-      if (!error && withdrawUser) {
-        setIsLogin(false);
-        removeCookie("CHANNEL_Token");
-        setUserToken("");
-        setUserData({});
-        alert("DID 로그인 인증이 철회되었습니다.");
-        window.location.href = "http://localhost:4001/api/user/logout";
-      }
+      // const { error, withdrawDIDchk, withdrawUser, token } = response.data;
+      // if (!error && withdrawDIDchk) {
+      //   setUserToken(token);
+      //   setCookie("CHANNEL_Token", token);
+      //   alert("DID 인증이 철회되었습니다.");
+      //   window.location.href = "http://localhost:4001/api/user/logout";
+      // }
+      // if (!error && withdrawUser) {
+      //   setIsLogin(false);
+      //   removeCookie("CHANNEL_Token");
+      //   setUserToken("");
+      //   setUserData({});
+      //   alert("DID 로그인 인증이 철회되었습니다.");
+      //   window.location.href = "http://localhost:4001/api/user/logout";
+      // }
+      window.location.href = `http://localhost:4001/api/user/withdrawDID?userCode=${userData?.userCode}`;
     } catch (err) {
       const error = err as AxiosError<any>;
       console.log(error);
