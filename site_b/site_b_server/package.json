@@ -16,7 +16,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
-    "kong-did": "^1.0.6",
+    "kong-did": "^1.0.8",
     "mysql2": "^2.3.3"
   },
   "devDependencies": {

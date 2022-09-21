@@ -1,9 +1,9 @@
-const express = require("express");
-const cors = require("cors");
-const { pool } = require("./models/db/db.js");
-const did = require("./did");
-const cookieParser = require("cookie-parser");
-const axios = require("axios");
+const express = require('express');
+const cors = require('cors');
+const { pool } = require('./models/db/db.js');
+const did = require('./did');
+const cookieParser = require('cookie-parser');
+const axios = require('axios');
 
 const app = express();
 
@@ -12,7 +12,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.post("/user", async (req, res) => {
+app.post('/user', async (req, res) => {
   const { address } = req.body;
   const selectSql = `
   SELECT * FROM user WHERE address="${address}"
@@ -22,7 +22,7 @@ app.post("/user", async (req, res) => {
     const [[selectResult]] = await pool.query(selectSql);
     user = selectResult;
   } catch (error) {
-    console.log("user Router Select Error");
+    console.log('user Router Select Error');
     console.log(error);
     res.sendStatus(500);
     return;
@@ -37,7 +37,7 @@ app.post("/user", async (req, res) => {
       await pool.query(insertSql);
       res.json({ signUp: false });
     } catch (error) {
-      console.log("user Router Insert Error");
+      console.log('user Router Insert Error');
       console.log(error);
       res.sendStatus(500);
       return;
@@ -49,7 +49,7 @@ app.post("/user", async (req, res) => {
   }
 });
 
-app.post("/alias", async (req, res) => {
+app.post('/alias', async (req, res) => {
   const { account, alias } = req.body;
 
   try {
@@ -59,7 +59,7 @@ app.post("/alias", async (req, res) => {
 
     await pool.query(sql);
   } catch (error) {
-    console.log("alias router update query error");
+    console.log('alias router update query error');
     res.sendStatus(500);
   }
 
@@ -70,18 +70,18 @@ app.post("/alias", async (req, res) => {
     const [[userData]] = await pool.query(sql);
     res.json({ result: true, userData });
   } catch (error) {
-    console.log("alias router SELECT query error");
+    console.log('alias router SELECT query error');
     console.log(error);
     res.sendStatus(500);
   }
 });
 
-app.get("/DID", (req, res) => {
+app.get('/DID', (req, res) => {
   const authUrl = did.getAuthUrl();
   res.redirect(authUrl);
 });
 
-app.get("/did/redirect", async (req, res) => {
+app.get('/did/redirect', async (req, res) => {
   const { B_SITE_COOKIE } = req.cookies;
   try {
     const userInfo = await did.getUserInfo(req);
@@ -93,7 +93,7 @@ app.get("/did/redirect", async (req, res) => {
     const [[user]] = await pool.query(selectSql);
 
     if (user) {
-      res.redirect("http://localhost:3001/duplicateDidError");
+      res.redirect('http://localhost:3001/duplicateDidError');
       return;
     }
 
@@ -103,36 +103,33 @@ app.get("/did/redirect", async (req, res) => {
     WHERE _id='${B_SITE_COOKIE}'
     `;
     await pool.query(sql);
-    res.redirect("http://localhost:3002/");
+    res.redirect('http://localhost:3002/');
   } catch (error) {
     console.log(error);
-    res.redirect("http://localhost:3002/");
+    res.redirect('http://localhost:3002/');
   }
 });
 
-app.post("/did/disconnect", async (req, res) => {
+app.get('/did/disconnect', async (req, res) => {
   const { B_SITE_COOKIE } = req.cookies;
-  const { userCode } = req.body;
+  const { userCode } = req.query;
   try {
-    const result = await did.disconnect(userCode);
-    if (result) {
-      const sql = `
+    const sql = `
       UPDATE user
       SET userCode=NULL
       WHERE _id='${B_SITE_COOKIE}'
       `;
-      await pool.query(sql);
-      res.send(true);
-    } else {
-      res.sendStatus(500);
-    }
+    await pool.query(sql);
+    res.redirect(
+      `http://13.124.189.38:8000/authorizor/disconnect?clientID=2ca154369bbc4638bb4fdc8689525138&userCode=${userCode}`
+    );
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
 
-app.post("/did/pointInfo", async (req, res) => {
+app.post('/did/pointInfo', async (req, res) => {
   const { userCode } = req.body;
   try {
     const sql = `select pt from user where userCode="${userCode}"`;
@@ -144,7 +141,7 @@ app.post("/did/pointInfo", async (req, res) => {
   }
 });
 
-app.post("/did/checkPoint", async (req, res) => {
+app.post('/did/checkPoint', async (req, res) => {
   const { userCode } = req.body;
   try {
     const result = await did.checkPoint(userCode);
@@ -155,14 +152,14 @@ app.post("/did/checkPoint", async (req, res) => {
   }
 });
 
-app.post("/purchase", async (req, res) => {
+app.post('/purchase', async (req, res) => {
   const {
     values: { local, ...points },
     userCode,
   } = req.body;
 
   try {
-    const response = await axios.post("http://3.38.58.1:4000/app/usePoint", {
+    const response = await axios.post('http://3.38.58.1:4000/app/usePoint', {
       points,
       userCode,
     });
@@ -176,7 +173,7 @@ app.post("/purchase", async (req, res) => {
       await pool.query(sql);
       res.send(true);
     } else {
-      throw new Error("internal errror");
+      throw new Error('internal errror');
     }
   } catch (error) {
     console.log(error);
@@ -184,7 +181,7 @@ app.post("/purchase", async (req, res) => {
   }
 });
 
-app.post("/did/allowPoint", async (req, res) => {
+app.post('/did/allowPoint', async (req, res) => {
   const { userCode, point } = req.body;
   try {
     const sql = `UPDATE user SET pt=pt-${point} WHERE userCode="${userCode}"`;

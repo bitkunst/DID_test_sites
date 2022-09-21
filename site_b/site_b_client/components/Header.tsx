@@ -47,13 +47,14 @@ const Header = () => {
   const disconnect = async () => {
     if (!userData?.userCode || !setUserData) return;
 
-    const result = await disconnectFromApp(userData.userCode);
-    if (result) {
-      setUserData({ ...userData, userCode: '' });
-      alert('DID 인증이 철회 되었습니다.');
-    } else {
-      alert('잠시후 다시 시도해주세요.');
-    }
+    // const result = await disconnectFromApp(userData.userCode);
+    // if (result) {
+    //   setUserData({ ...userData, userCode: '' });
+    //   alert('DID 인증이 철회 되었습니다.');
+    // } else {
+    //   alert('잠시후 다시 시도해주세요.');
+    // }
+    location.href = `http://localhost:4002/did/disconnect?userCode=${userData.userCode}`;
   };
 
   return (
