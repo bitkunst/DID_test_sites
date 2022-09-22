@@ -121,7 +121,7 @@ app.get('/did/disconnect', async (req, res) => {
       `;
     await pool.query(sql);
     res.redirect(
-      `http://13.124.189.38:8000/authorizor/disconnect?clientID=2ca154369bbc4638bb4fdc8689525138&userCode=${userCode}`
+      `http://13.124.189.38:8000/authorizor/disconnect?clientID=65c83d80c5ad49f38ab87b29198ddded&userCode=${userCode}`
     );
   } catch (error) {
     console.log(error);
@@ -159,21 +159,33 @@ app.post('/purchase', async (req, res) => {
   } = req.body;
 
   try {
-    const response = await axios.post('http://3.38.58.1:4000/app/usePoint', {
-      points,
-      userCode,
-    });
+    if (Object.keys(points).length) {
+      const response = await axios.post('http://3.38.58.1:4000/app/usePoint', {
+        points,
+        userCode,
+      });
+      if (response.data) {
+        if (local) {
+          const sql = `
+        UPDATE user SET pt=pt-${local}
+        WHERE userCode ="${userCode}"
+        `;
 
-    if (response.data) {
+          await pool.query(sql);
+        }
+        res.send(true);
+      } else {
+        throw new Error('internal errror');
+      }
+    } else {
       const sql = `
-      UPDATE user SET pt=pt-${local}
-      WHERE userCode ="${userCode}"
-      `;
+        UPDATE user SET pt=pt-${local}
+        WHERE userCode ="${userCode}"
+        `;
 
       await pool.query(sql);
       res.send(true);
-    } else {
-      throw new Error('internal errror');
+      return;
     }
   } catch (error) {
     console.log(error);
@@ -188,6 +200,10 @@ app.post('/did/allowPoint', async (req, res) => {
     await pool.query(sql);
     res.send(true);
   } catch (error) {}
+});
+
+app.get('/test', (req, res) => {
+  res.send('adsfasdfasd');
 });
 
 app.listen(4002);

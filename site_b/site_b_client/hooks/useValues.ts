@@ -72,7 +72,10 @@ const useValues = (
       const { userCode } = userData;
       const result = await purchase(values, userCode);
       if (result && setUserData) {
-        setUserData({ ...userData, pt: userData.pt - Number(values.local) });
+        setUserData({
+          ...userData,
+          pt: userData.pt - (values.local ? Number(values.local) : 0),
+        });
         closeModal();
         alert('구매 성공!');
       } else {
