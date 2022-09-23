@@ -136,7 +136,9 @@ const Header = () => {
                 <span>내 포인트 : {point}</span>
               )} */}
               <Flex direction="column">
-                <Text>내 포인트 : {userData?.point}</Text>
+                <Text>
+                  {userData?.userId} 포인트 : {userData?.point}
+                </Text>
                 {userData?.userCode !== "" && (
                   <>
                     <Text fontWeight="extrabold" color="#319795">
